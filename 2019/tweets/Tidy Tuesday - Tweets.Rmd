@@ -18,48 +18,23 @@ library(tidytext)
 
 ```{r}
 tidy_tuesday <- readRDS("tidytuesday_tweets.rds")
-
 rstats <- readRDS("rstats_tweets.rds")
-
 tidy_tuesday$document <- "tidy_tuesday"
 rstats$document <- "rstats"
-
 all_tweets <- rbind(tidy_tuesday, rstats)
 ```
 
-Getting a quick look at the data, we can see that there is a long tail to the upper end of the data.
+Let's look at who is the most favorited in tweets.  This first table shows the total number of times someone favorited a tweet, grouped by screen_name.  We see that some common names are appearing, such as Rbloggers (who tweets far more than anyone else in the group) and some of the other big names in the R community (hadleywickham and drob).  Note that I looked at the mean, but the top favorited come from individuals who rarely tweet and had one tweet go viral.
 ```{r}
-ggplot(data = all_tweets) +
-  geom_boxplot(aes(x = document, y = favorite_count)) 
-
-ggplot(data = all_tweets) +
-  geom_boxplot(aes(x = document, y = log10(favorite_count)))
-```
-
-Let's look at who is the most favorited in tweets.  This first table shows the total number of times someone favorited a tweet, grouped by screen_name.  We see that some common names are appearing, such as Rbloggers (who tweets far more than anyone else in the group) and some of the other big names in the R community (hadleywickham and drob).  
-```{r}
-all_tweets %>%
+top_favorited <- all_tweets %>%
   group_by(screen_name) %>%
   summarise(sum_favorited = sum(favorite_count),
-            mean_favorited = mean(favorite_count),
             total_tweets = n()) %>%
   top_n(10, sum_favorited) %>%
   arrange(desc(sum_favorited))
 ```
 
-Now we look at the mean favorited count and see that the top 10 for the mean favorited is heavily influenced by those tweets that go "viral". No one in this top 10 have tweeted using these two hashtags more than 10 times.  
-
-```{r}
-all_tweets %>%
-  group_by(screen_name) %>%
-  summarise(sum_favorited = sum(favorite_count),
-            mean_favorited = mean(favorite_count),
-            total_tweets = n()) %>%
-  top_n(10, mean_favorited) %>%
-  arrange(desc(mean_favorited))
-```
-
-# Over time
+# Tweets Over time
 
 ```{r}
 library(lubridate)
@@ -72,10 +47,37 @@ all_tweets %>%
   geom_line(aes(x = date, y = n, colour = document))
 ```
 
-# How to get people to like me? A Topic Modeling Approach
+# What do the Most Favorited People Talk About?
 
+Now filtering for the people who were the most favorited?  First we need to unnest_tokens using the `tidytext` package.  Then we will only look at those that were the top favorited people.  Lastly, we caclculate the tf-idf and then graph the results!
 ```{r}
 tidy_text <- all_tweets %>%
   filter(is_retweet == "FALSE") %>%
-  unnest_tokens(word, text, token = "tweets")
+  unnest_tokens(word, text, token = "tweets") 
+
+tidy_text_top_favorited <- tidy_text %>%
+  filter(screen_name %in% top_favorited$screen_name) 
+
+tf_idf <- tidy_text_top_favorited %>%
+  count(screen_name, word, sort = TRUE) %>%
+  bind_tf_idf(word, screen_name, n) %>%
+  arrange(desc(tf_idf))
+
+tf_idf
 ```
+
+```{r}
+tf_idf %>%
+  filter(screen_name != "dataandme") %>%
+  group_by(screen_name) %>%
+  top_n(12, tf_idf) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, tf_idf)) %>%
+  ggplot(aes(word, tf_idf, fill = screen_name)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ screen_name, scales = "free") +
+  ylab("tf-idf") +
+  coord_flip()
+```
+
+
