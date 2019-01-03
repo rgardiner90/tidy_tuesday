@@ -66,6 +66,7 @@ tf_idf <- tidy_text_top_favorited %>%
 tf_idf
 ```
 
+I had to take out "dataandme" because of weird text issues.
 ```{r}
 tf_idf %>%
   filter(screen_name != "dataandme") %>%
