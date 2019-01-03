@@ -19,7 +19,63 @@ library(tidytext)
 ```{r}
 tidy_tuesday <- readRDS("tidytuesday_tweets.rds")
 
-rstates <- readRDS("rstats_tweets.rds")
+rstats <- readRDS("rstats_tweets.rds")
+
+tidy_tuesday$document <- "tidy_tuesday"
+rstats$document <- "rstats"
+
+all_tweets <- rbind(tidy_tuesday, rstats)
 ```
 
+Getting a quick look at the data, we can see that there is a long tail to the upper end of the data.
+```{r}
+ggplot(data = all_tweets) +
+  geom_boxplot(aes(x = document, y = favorite_count)) 
 
+ggplot(data = all_tweets) +
+  geom_boxplot(aes(x = document, y = log10(favorite_count)))
+```
+
+Let's look at who is the most favorited in tweets.  This first table shows the total number of times someone favorited a tweet, grouped by screen_name.  We see that some common names are appearing, such as Rbloggers (who tweets far more than anyone else in the group) and some of the other big names in the R community (hadleywickham and drob).  
+```{r}
+all_tweets %>%
+  group_by(screen_name) %>%
+  summarise(sum_favorited = sum(favorite_count),
+            mean_favorited = mean(favorite_count),
+            total_tweets = n()) %>%
+  top_n(10, sum_favorited) %>%
+  arrange(desc(sum_favorited))
+```
+
+Now we look at the mean favorited count and see that the top 10 for the mean favorited is heavily influenced by those tweets that go "viral". No one in this top 10 have tweeted using these two hashtags more than 10 times.  
+
+```{r}
+all_tweets %>%
+  group_by(screen_name) %>%
+  summarise(sum_favorited = sum(favorite_count),
+            mean_favorited = mean(favorite_count),
+            total_tweets = n()) %>%
+  top_n(10, mean_favorited) %>%
+  arrange(desc(mean_favorited))
+```
+
+# Over time
+
+```{r}
+library(lubridate)
+all_tweets$date <- date(all_tweets$created_at)
+
+all_tweets %>%
+  group_by(date, document) %>%
+  count(date) %>%
+  ggplot() +
+  geom_line(aes(x = date, y = n, colour = document))
+```
+
+# How to get people to like me? A Topic Modeling Approach
+
+```{r}
+tidy_text <- all_tweets %>%
+  filter(is_retweet == "FALSE") %>%
+  unnest_tokens(word, text, token = "tweets")
+```
