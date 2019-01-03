@@ -1,0 +1,25 @@
+---
+title: "Tidy Tuesday - Tweets"
+author: "Richard G. Gardiner"
+date: "1/1/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data and Packages
+
+```{r}
+library(tidyverse)
+library(tidytext)
+```
+
+```{r}
+tidy_tuesday <- readRDS("tidytuesday_tweets.rds")
+
+rstates <- readRDS("rstats_tweets.rds")
+```
+
+
