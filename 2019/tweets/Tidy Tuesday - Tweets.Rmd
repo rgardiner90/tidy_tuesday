@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Data and Packages
 
-```{r}
+```{r, echo = FALSE}
 library(tidyverse)
 library(tidytext)
 ```
@@ -44,7 +44,10 @@ all_tweets %>%
   group_by(date, document) %>%
   count(date) %>%
   ggplot() +
-  geom_line(aes(x = date, y = n, colour = document))
+  geom_line(aes(x = date, y = n, colour = document)) +
+  ylab("Number of Tweets")
+
+ggsave("TweetsOverTime.png")
 ```
 
 # What do the Most Favorited People Talk About?
@@ -79,6 +82,8 @@ tf_idf %>%
   facet_wrap(~ screen_name, scales = "free") +
   ylab("tf-idf") +
   coord_flip()
+
+ggsave("TopTweetersAndSubject.png")
 ```
 
 
