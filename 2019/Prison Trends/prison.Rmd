@@ -13,9 +13,94 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
+library(glue)
+library(magick)
+library(gganimate)
+library(transformr)
+library(maps)
+library(usmap)
+library(readxl)
+
 
 prison <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-01-22/prison_population.csv")
-
-
-
+ideology <- read_excel("ideology.xlsx")
+ideology$state <- tolower(ideology$state)
 ```
+
+
+```{r}
+prison %>%
+  group_by(state, year) %>%
+  filter(!is.na(prison_population)) %>%
+  summarise(state_prison = sum(prison_population)) %>%
+  spread(key = year, value = state_prison)
+
+state_abb <- state.abb
+state_name <- tolower(state.name)
+state_divisions <- state.division
+state_names <- cbind(state_abb, state_name, state.x77, state.region)
+state_names <- as_tibble(state_names)
+
+state_names$state.region <- ifelse(state_names$state.region == "1", "Northeast",
+                                   ifelse(state_names$state.region == "2", "South",
+                                          ifelse(state_names$state.region == "3", "North Central",
+                                                 "West")))
+```
+
+I am thinking about doing something like gganimate to show differences in time
+
+
+```{r}
+prison1 <- prison %>%
+  group_by(state, year) %>%
+  filter(!is.na(prison_population)) %>%
+  summarise(state_prison = sum(prison_population))
+
+
+prison1 <- prison1 %>%
+  left_join(state_names, by = c("state" = "state_abb")) %>%
+  left_join(ideology, by = c("state_name" = "state", "year" = "year"))
+
+prison1$Population <- as.numeric(prison1$Population)
+
+prison1 <- prison1 %>%
+  group_by(state, year) %>%
+  mutate(prisonerPerCapita = sum(state_prison) / Population) %>%
+  filter(prisonerPerCapita > 0)
+
+p <- ggplot(prison1, aes(government, prisonerPerCapita, color = state)) +
+  geom_point(show.legend = FALSE) +
+  xlab("Government Ideology") +
+  ylab("Prison Population") 
+
+anim <- p +
+  transition_states(year) +
+  labs(title = "Year: {closest_state}") +
+  shadow_wake(wake_length = 0.1,
+              alpha = FALSE)
+
+anim
+
+prison1$Illiteracy <- as.numeric(prison1$Illiteracy)
+
+q <- ggplot(prison1, aes(state.region, prisonerPerCapita, color = state.region)) +
+  geom_boxplot(show.legend = FALSE) +
+  xlab("Regions") +
+  ylab("Prison Population Per 100,000") 
+
+animQ <- q +
+  transition_states(year) +
+  labs(title = "Year: {closest_state}") # +
+  # shadow_wake(wake_length = 0.1,
+              # alpha = FALSE)
+
+animQ
+
+anim_save("prison pop.gif")
+```
+
+
+
+
+
+
