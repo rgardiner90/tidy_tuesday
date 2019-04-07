@@ -62,6 +62,9 @@ bike_traffic %>%
   ggplot(aes(x = day, y = bike_count)) +
   geom_line() 
 
+# ggsave("day riders.jpeg")
+
+
 bike_traffic %>%
   group_by(month, year) %>%
   summarize(bike_month = sum(bike_count, na.rm = TRUE)) %>%
@@ -76,5 +79,7 @@ bike_traffic %>%
   scale_y_continuous(labels = comma_format()) +
   labs(x = "", y = "Total Number of Bike Riders",
        title = "Riders Really Don't Like the Cold", color = "")
+
+# ggsave("months.jpeg")
 ```
 
