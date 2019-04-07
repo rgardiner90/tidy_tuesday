@@ -1,0 +1,80 @@
+---
+title: "Seattle Bikes"
+author: "Richard G. Gardiner"
+date: "4/6/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data and Packages
+
+```{r}
+library(tidyverse)
+library(ggridges)
+library(lubridate)
+library(scales)
+
+bike_traffic <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-04-02/bike_traffic.csv") %>%
+  mutate(date = as.POSIXct(date, format = "%m/%d/%Y %I:%M:%S"),
+         day_week = wday(date),
+         day = date(date),
+         month = month(date),
+         year = year(date)) %>%
+  filter(!is.na(year), 
+         !(year %in% c(2013, 2019)))
+```
+
+```{r}
+bike_traffic %>%
+  count(crossing, sort = TRUE)
+
+bike_traffic %>%
+  count(direction)
+
+# a few extreme outliers
+bike_traffic %>%
+  ggplot(aes(x = bike_count)) +
+  geom_histogram()
+
+bike_traffic %>%
+  count(ped_count)
+
+bike_traffic %>%
+  count(year)
+```
+
+
+```{r}
+bike_traffic %>%
+  mutate(crossing = fct_reorder(crossing, bike_count)) %>%
+  filter(bike_count < 100) %>%
+  ggplot(aes(x = bike_count, y = crossing)) +
+  geom_density_ridges(alpha = 0.6, bandwidth = 4)
+```
+
+
+```{r}
+bike_traffic %>%
+  filter(bike_count < 200) %>%
+  ggplot(aes(x = day, y = bike_count)) +
+  geom_line() 
+
+bike_traffic %>%
+  group_by(month, year) %>%
+  summarize(bike_month = sum(bike_count, na.rm = TRUE)) %>%
+  ungroup() %>%
+  ggplot(aes(x = month, y = bike_month, color = as.factor(year))) +
+  geom_line() +
+  scale_x_discrete(limit = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"),
+                   labels = c("January", "February", "March", "April", "May", "June", "July", 
+                              "August", "September", "October", "November", "December")) +
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_y_continuous(labels = comma_format()) +
+  labs(x = "", y = "Total Number of Bike Riders",
+       title = "Riders Really Don't Like the Cold", color = "")
+```
+
