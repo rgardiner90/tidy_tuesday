@@ -1,0 +1,49 @@
+---
+title: "Economist"
+author: "Richard G. Gardiner"
+date: "4/17/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+library(lubridate)
+
+
+brexit <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-04-16/brexit.csv") %>%
+  mutate(date = as.Date(date, format = "%d/%m/%y"))
+  
+brexit %>%
+  mutate(month = floor_date(date, unit = "month")) %>%
+  group_by(month) %>%
+  summarize(mean_right = mean(percent_responding_right),
+            mean_wrong = mean(percent_responding_wrong)) %>%
+  mutate(more_right = ifelse(mean_right >= mean_wrong, 1, 0)) %>%
+  gather(right_wrong, vote, -month, -more_right) %>%
+  ggplot(aes(x = month, y = vote, color = right_wrong)) +
+  geom_line() +
+  theme_light() +
+  labs(x = "Month", y = "View on Brexit Referendum", color = "View",
+       title = "Changing Views of Brexit Referrendum") +
+  scale_color_discrete(label = c("Right", "Wrong"))
+
+# ggsave("monthchart.jpeg")
+
+brexit %>%
+  gather(right_wrong, percent, -date) %>%
+  ggplot(aes(x = date, y = percent, color = right_wrong)) +
+  geom_smooth() +
+  geom_point() +
+  labs(x = "", y = "View on Brexit Referendum", color = "View",
+       title = "Changing Views of Brexit Referrendum") +
+    scale_color_discrete(label = c("Right", "Wrong")) +
+  theme_light()
+
+# ggsave("article.jpeg")
+```
+
