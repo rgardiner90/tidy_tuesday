@@ -1,0 +1,98 @@
+---
+title: "plastic waste"
+author: "Richard G. Gardiner"
+date: "5/21/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(ggrepel)
+library(ggridges)
+library(gapminder)
+
+waste <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-21/coastal-population-vs-mismanaged-plastic.csv") %>%
+  clean_names() %>%
+  filter(!is.na(mismanaged_plastic_waste_tonnes))
+```
+
+```{r}
+waste %>%
+  filter(entity != "World") %>%
+  ggplot(aes(mismanaged_plastic_waste_tonnes)) +
+  geom_histogram() +
+  scale_x_continuous(labels = scales::comma_format())
+```
+
+
+```{r}
+waste %>%
+  ggplot(aes(coastal_population)) +
+  geom_histogram()
+```
+
+This is too boring and other people seem to have done this one a lot.
+
+```{r}
+per_capita <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-21/per-capita-mismanaged-plastic-waste-vs-gdp-per-capita.csv") %>%
+  clean_names() %>%
+  filter(!is.na(per_capita_mismanaged_plastic_waste_kilograms_per_person_per_day))
+
+per_capita %>%
+  ggplot(aes(per_capita_mismanaged_plastic_waste_kilograms_per_person_per_day)) +
+  geom_histogram()
+
+per_capita %>%
+  ggplot(aes(per_capita_mismanaged_plastic_waste_kilograms_per_person_per_day)) +
+  geom_histogram()
+
+per_capita %>%
+  ggplot(aes(gdp_per_capita_ppp_constant_2011_international_rate)) +
+  geom_histogram()
+```
+
+```{r}
+joined <- per_capita %>%
+  left_join(waste, by = "code") %>%
+  select(-year.y, -total_population_gapminder.y, -entity.y) %>%
+  rename(year = 3,
+         country = 1,
+         pop = total_population_gapminder.x)
+
+joined %>%
+  ggplot(aes(x = gdp_per_capita_ppp_constant_2011_international_rate, 
+             y = mismanaged_plastic_waste_tonnes,
+             size = pop)) +
+  geom_point()
+```
+
+```{r}
+gapminder %>%
+  group_by(country) %>%
+  top_n(1, pop) %>%
+  select(country, continent) %>%
+  left_join(joined, by = "country") %>%
+  na.omit() %>%
+  filter(continent != "Oceania") %>%
+  ggplot(aes(x = per_capita_mismanaged_plastic_waste_kilograms_per_person_per_day, y = continent)) +
+  geom_density_ridges(jittered_points = TRUE, alpha = 0.5) +
+  theme_minimal() +
+  labs(x = "Per Capita Mismanaged Plastic Waste \n(kilo per person per day)",
+       y = "",
+       title = "What is the Distribution of Per Capita Mismanaged \nPlastic Waste Across Continents?",
+       caption = "Using Gapminder coding for Continents") +
+  geom_text(data = subset(ridges_data, per_capita_mismanaged_plastic_waste_kilograms_per_person_per_day > 0.15), 
+            aes(label = country), vjust = 1)
+
+# ggsave("plastic waste.jpeg")
+```
+
+
+
+
