@@ -1,0 +1,80 @@
+---
+title: "media"
+author: "Richard G. Gardiner"
+date: "7/5/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+
+media_franchises <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-07-02/media_franchises.csv")
+```
+
+
+```{r}
+media_franchises %>%
+  count(franchise, sort = TRUE)
+
+media_franchises  %>%
+  count(revenue_category, sort = TRUE)
+
+media_franchises %>%
+  ggplot(aes(revenue)) +
+  geom_histogram() +
+  scale_x_log10()
+
+media_franchises %>%
+  group_by(year_created) %>%
+  count() %>%
+  ggplot(aes(x = year_created, y = n)) +
+  geom_line() 
+
+media_franchises %>%
+  count(owners, sort = TRUE)
+
+media_franchises %>%
+  count(original_media, sort = TRUE)
+
+media_franchises %>%
+  group_by(owners) %>%
+  summarise(total_revenue = sum(revenue)) %>%
+  arrange(desc(total_revenue)) %>%
+  top_n(5, total_revenue) %>%
+  ggplot(aes(x = owners, y = total_revenue)) +
+  geom_col() +
+  coord_flip()
+```
+
+```{r}
+library(ggalluvial)
+
+format <- media_franchises %>%
+  select(revenue, original_media, owners) %>%
+  mutate(owners = fct_lump(owners, 5),
+         original_media = fct_lump(original_media, 5)) %>%
+  filter(owners != "Other")
+
+is_alluvia_form(format, axes = 3, silent = TRUE)
+
+ggplot(format, aes(y = revenue, axis1 = original_media, axis2 = owners)) +
+  geom_alluvium() +
+  geom_stratum(width = 1/12, fill = "black", color = "grey") +
+  geom_label(stat = "stratum", label.strata = TRUE) +
+  scale_x_discrete(limits = c("Format", "Owner"), expand = c(0.05, 0.25))
+```
+
+
+```{r}
+media_franchises %>%
+  ggplot(aes(x = year_created, y = revenue, fill = revenue_category)) +
+  geom_area()
+```
+
+
+

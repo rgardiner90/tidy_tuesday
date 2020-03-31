@@ -1,0 +1,12 @@
+name: data_deck
+title: data_deck
+username:
+account: rgardiner90
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1038286
+bundleId: 2242646
+url: https://rgardiner90.shinyapps.io/data_deck/
+when: 1563411524.24939
+asMultiple: FALSE
+asStatic: FALSE
