@@ -1,0 +1,42 @@
+---
+title: "office"
+author: "Richard G. Gardiner"
+date: "3/31/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(schrute)
+
+theme_set(theme_light())
+```
+
+```{r}
+transcripts <- schrute::theoffice
+
+office_ratings <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-03-17/office_ratings.csv')
+```
+
+```{r}
+office_ratings %>%
+  ggplot(aes(x = air_date, y = imdb_rating, group = 1, 
+             color = factor(season))) +
+  geom_line(show.legend = FALSE) +
+  geom_smooth(show.legend = FALSE) +
+  geom_point(show.legend = FALSE) +
+  labs(y = "IMDB Rating",
+       title = "IMDB of Office Seasons",
+       subtitle = "Color = Season")
+```
+
+
+
+
+
+
+
