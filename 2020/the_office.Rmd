@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 library(schrute)
+library(cowplot)
 
 theme_set(theme_light())
 ```
@@ -23,20 +24,81 @@ office_ratings <- read_csv('https://raw.githubusercontent.com/rfordatascience/ti
 ```
 
 ```{r}
+best <- office_ratings %>%
+  filter(title %in% c("Goodbye, Michael", "Finale"))
+
+worst <- office_ratings %>%
+  filter(title %in% c("Get the Girl", "The Banker"))
+
 office_ratings %>%
   ggplot(aes(x = air_date, y = imdb_rating, group = 1, 
              color = factor(season))) +
   geom_line(show.legend = FALSE) +
   geom_smooth(show.legend = FALSE) +
   geom_point(show.legend = FALSE) +
-  labs(y = "IMDB Rating",
+  geom_text(data = best, aes(label = title), nudge_y = .2, show.legend = FALSE) +
+  geom_text(data = worst, aes(label = title), nudge_y = -0.2, show.legend = FALSE) +
+  labs(x = "Air Date",
+       y = "IMDB Rating",
        title = "IMDB of Office Seasons",
        subtitle = "Color = Season")
 ```
 
+```{r}
+logo <- png::readPNG("office_logo.png")
+
+lines <- transcripts %>%
+  count(character, sort = TRUE) %>%
+  filter(n > 100) %>%
+  mutate(character = fct_reorder(character, n)) %>%
+  ggplot(aes(x = character, y = n, fill = n)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  scale_fill_gradient2(low = "white", mid = 3000, high = "orange") +
+  labs(y = "Number of Lines")
+
+ggdraw(lines) + 
+  draw_image(logo, width = 0.26, height = 0.4,
+             x = 0.6, y = 0.2) 
+```
 
 
+```{r}
+library(tidytext)
 
+top_characters <- transcripts %>%
+  count(character, sort = TRUE) %>%
+  filter(n > 100) %>%
+  select(character) %>%
+  as.vector()
+
+
+tokenized <- transcripts %>%
+  unnest_tokens(word, text) 
+  
+tf_idf <- tokenized %>%
+  mutate(character = str_remove_all(character, '"')) %>%
+  filter(character %in% top_characters$character) %>%
+  select(character, word) %>%
+  count(character, word, sort = TRUE) %>%
+  anti_join(stop_words) %>%
+  bind_tf_idf(word, character, n) %>%
+  group_by(character) %>%
+  top_n(5, tf_idf) %>%
+  ungroup()
+  
+
+tf_idf %>%
+  mutate(word = reorder_within(word, tf_idf, character)) %>%
+  filter(character != "David Wallace") %>%
+  ggplot(aes(x = word, y = tf_idf, fill = character)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  scale_x_reordered() +
+  facet_wrap(~ character, scales = "free") +
+  labs(y = "Most Unique Words by Character") +
+  theme(axis.text.x=element_blank(), axis.ticks.x = element_blank())
+```
 
 
 
