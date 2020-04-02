@@ -1,0 +1,102 @@
+---
+title: "tbi"
+author: "Richard G. Gardiner"
+date: "4/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+library(scales)
+
+tbi_military <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-03-24/tbi_military.csv')
+
+tbi_year <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-03-24/tbi_year.csv')
+
+theme_set(theme_light())
+```
+
+```{r}
+tbi_military %>%
+  group_by(service, year) %>%
+  summarise(total_diagnosed = sum(diagnosed, na.rm = TRUE)) %>%
+  ggplot(aes(x = year, y = total_diagnosed, color = service)) +
+  geom_line() +
+  scale_y_continuous(labels = comma_format())
+```
+
+
+```{r}
+tbi_military %>%
+  group_by(severity) %>%
+  summarise(total_diagnosed = sum(diagnosed, na.rm = TRUE)) %>%
+  ggplot(aes(x = severity, y = total_diagnosed)) +
+  geom_col() +
+  scale_y_continuous(labels = comma_format())
+```
+
+```{r}
+tbi_military %>%
+  group_by(service, component, year) %>%
+  summarise(total_diagnosed = sum(diagnosed, na.rm = TRUE)) %>%
+  ungroup() %>%
+  ggplot(aes(x = year, y = total_diagnosed, color = component)) +
+  geom_line() +
+  facet_wrap(~ service, scales = "free")
+```
+
+```{r}
+tbi_military %>%
+  group_by(service, severity, year) %>%
+  summarise(total = sum(diagnosed, na.rm = TRUE)) %>%
+  ungroup() %>%
+  ggplot(aes(x = year, y = total, color = severity)) +
+  geom_line() +
+  facet_wrap(~ service, scales = "free")
+```
+
+```{r}
+tbi_year %>%
+  filter(injury_mechanism != "Total") %>%
+  group_by(injury_mechanism) %>%
+  summarise(average = mean(rate_est)) %>%
+  ungroup() %>%
+  mutate(injury_mechanism = fct_reorder(injury_mechanism, average)) %>%
+  ggplot(aes(x = injury_mechanism, y = average)) +
+  geom_col() +
+  labs(x = "", y = "Average TBI injuries per 100,000") +
+  coord_flip() 
+```
+
+```{r}
+tbi_year %>%
+  group_by(year) %>%
+  summarise(average = mean(rate_est)) %>%
+  ggplot(aes(year, average)) +
+  geom_line() +
+  labs(title = "What has caused the large increase in TBI?",
+       x = "Year",
+       y = "Average TBI injuries per 100,000")
+```
+
+```{r}
+tbi_year %>%
+  filter(injury_mechanism != "Total") %>%
+  group_by(year, injury_mechanism) %>%
+  summarise(average = mean(rate_est)) %>%
+  ungroup() %>%
+  mutate(injury_mechanism = str_to_title(injury_mechanism)) %>%
+  ggplot(aes(year, average, color = injury_mechanism)) +
+  geom_line() +
+  labs(title = "What has caused the large increase in TBI?",
+       subtitle = "Primarily driven by unintential events",
+       x = "Year",
+       y = "Average TBI injuries per 100,000",
+       legend = "Type of Injury")
+```
+
