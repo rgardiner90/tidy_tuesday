@@ -12,8 +12,50 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 
-
 gdpr_violations <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-04-21/gdpr_violations.tsv')
 gdpr_text <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-04-21/gdpr_text.tsv')
 ```
 
+```{r}
+gdpr_violations
+```
+
+## Plan for Analysis
+
+```{r}
+gdpr_violations %>%
+  separate_rows(article_violated, sep = "\\|") %>%
+  count(article_violated, sort = TRUE) %>%
+  mutate(article_violated = fct_reorder(article_violated, n)) %>%
+  head(10) %>%
+  ggplot(aes(x = article_violated, y = n)) +
+  geom_col() +
+  labs(x = "Article Violated", y = "Number of Times Citated") +
+  coord_flip() +
+  theme_minimal() 
+```
+
+```{r}
+gdpr_violations %>%
+  count(name, sort = TRUE)
+```
+
+```{r}
+gdpr_violations %>%
+  group_by(name) %>%
+  summarise(sum_price = sum(price, na.rm = TRUE)) %>%
+  ungroup() %>%
+  arrange(desc(sum_price)) %>%
+  head(15) %>%
+  mutate(name = fct_reorder(name, sum_price)) %>%
+  ggplot(aes(x = name, y = sum_price)) +
+  geom_col() +
+  labs(x = "Country Name", y = "Total Fines",
+       title = "Total Fines by Country Name") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  coord_flip()
+```
+
+3. Figure out more about this "authority" and maybe do something about that.
+4. Take date and plot the count of citations and see if it goes up. Then also see if the size of the fine is increasing/decreasing.
+5. do tf-idf or something to by article to figure out what each one is about (gdpr_text)
