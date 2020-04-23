@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
+library(lubridate)
 
 gdpr_violations <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-04-21/gdpr_violations.tsv')
 gdpr_text <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-04-21/gdpr_text.tsv')
@@ -56,6 +57,58 @@ gdpr_violations %>%
   coord_flip()
 ```
 
-3. Figure out more about this "authority" and maybe do something about that.
-4. Take date and plot the count of citations and see if it goes up. Then also see if the size of the fine is increasing/decreasing.
+
+STILL NEED TO WORK ON THIS
+```{r}
+gdpr_violations %>%
+  mutate(date2 = parse_date(date, "%m/%d/%Y")) %>%
+  count(date2) %>%
+  filter(date2 > "1970-01-01") %>%
+  mutate(month = month(date2),
+         year = year(date2)) %>%
+  group_by(month, year) %>%
+  summarise(total = sum(n)) %>%
+  ungroup() %>%
+  mutate(month_year = as.Date(paste0(year, "-", month, "-01"))) %>%
+  ggplot(aes(x = month, y = total, color = factor(year))) +
+  geom_line()
+
+gdpr_violations %>%
+  mutate(date2 = parse_date(date, "%m/%d/%Y")) %>%
+  count(date2) %>%
+  filter(date2 > "1970-01-01") %>%
+  mutate(month = month(date2),
+         year = year(date2)) %>%
+  group_by(month, year) %>%
+  summarise(total = sum(n)) %>%
+  ungroup() %>%
+  mutate(month_year = as.Date(paste0(year, "-", month, "-01"))) %>%
+  ggplot(aes(x = month_year, y = total)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "", y = "Number of Fines Issued",
+       title = "Number of Fines Issued by Month")
+```
+
+```{r}
+gdpr_violations %>%
+  mutate(date2 = parse_date(date, "%m/%d/%Y")) %>%
+  filter(date2 > "1970-01-01") %>%
+  mutate(year = year(date2)) %>%
+  group_by(year) %>%
+  summarise(total = sum(price)) %>%
+  ungroup()  %>%
+  ggplot(aes(x = year, y = total)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  labs(x = "Year",
+       y = "Total Fines (in Euros)",
+       title = "Total Number of Fines for Each Year",
+       subtitle = "GDPR took effect May 28, 2018. Data reported through April 2020.") +
+  theme_minimal()
+```
+
+
+3. Look at the largest fines to see if it is much different. Do a histogram of all fines.
+4. Regression of country and authority on amount.
 5. do tf-idf or something to by article to figure out what each one is about (gdpr_text)
