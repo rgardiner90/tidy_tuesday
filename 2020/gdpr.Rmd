@@ -108,7 +108,33 @@ gdpr_violations %>%
   theme_minimal()
 ```
 
+```{r}
+# Google had HUGE fine
+gdpr_violations %>%
+  mutate(scaled_price = scale(price)) %>%
+  arrange(desc(price))
 
-3. Look at the largest fines to see if it is much different. Do a histogram of all fines.
+gdpr_violations %>%
+  ggplot(aes(x = price)) +
+  geom_histogram() +
+  scale_x_log10(labels = scales::dollar_format()) 
+```
+
+```{r}
+gdpr_violations %>%
+  group_by(controller) %>%
+  summarise(total_fines = sum(price)) %>%
+  ungroup() %>%
+  mutate(controller = fct_reorder(controller, total_fines)) %>%
+  arrange(desc(total_fines)) %>%
+  head(20) %>%
+  ggplot(aes(x = controller, y = total_fines)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  labs(x = "Entity Fined", y = "Total Fines") +
+  coord_flip() +
+  theme_minimal()
+```
+
 4. Regression of country and authority on amount.
 5. do tf-idf or something to by article to figure out what each one is about (gdpr_text)
