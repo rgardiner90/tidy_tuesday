@@ -138,3 +138,4 @@ gdpr_violations %>%
 
 4. Regression of country and authority on amount.
 5. do tf-idf or something to by article to figure out what each one is about (gdpr_text)
+6. Map of country and fines
