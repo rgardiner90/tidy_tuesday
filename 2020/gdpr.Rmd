@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 library(lubridate)
+library(broom)
 
 gdpr_violations <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-04-21/gdpr_violations.tsv')
 gdpr_text <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-04-21/gdpr_text.tsv')
@@ -136,6 +137,29 @@ gdpr_violations %>%
   theme_minimal()
 ```
 
-4. Regression of country and authority on amount.
+```{r}
+gdpr_violations %>%
+  mutate(country = fct_lump(name, 5),
+         article_violated = fct_lump(article_violated, 5),
+         type = fct_lump(type, 5)) %>%
+  lm(log10(price + 0.1) ~ country + article_violated + type, data = .) %>%
+  tidy() %>%
+  mutate(lower = estimate - std.error * 1.96,
+         upper = estimate + std.error * 1.96,
+         term = fct_reorder(term, estimate),
+         significant = ifelse(p.value < 0.05, 1, 0)) %>% 
+  ggplot(aes(x = term, y = estimate, color = as.factor(significant))) +
+  geom_point(show.legend = FALSE) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), show.legend = FALSE) +
+  geom_hline(yintercept = 0, lty = 2) +
+  labs(title = "Predictors of the Price of a Fine",
+       subtitle = "Blue color indicates statistical significance",
+       x = "",
+       y = "Coefficient Estimate") +
+  coord_flip() +
+  theme_minimal()
+  
+```
+
 5. do tf-idf or something to by article to figure out what each one is about (gdpr_text)
 6. Map of country and fines
