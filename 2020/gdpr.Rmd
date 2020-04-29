@@ -13,6 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(lubridate)
 library(broom)
+library(tidytext)
+library(tidylo)
 
 gdpr_violations <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-04-21/gdpr_violations.tsv')
 gdpr_text <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-04-21/gdpr_text.tsv')
@@ -161,5 +163,30 @@ gdpr_violations %>%
   
 ```
 
-5. do tf-idf or something to by article to figure out what each one is about (gdpr_text)
+```{r}
+log_odds_chapter <- gdpr_text %>%
+  unnest_tokens(word, gdpr_text) %>%
+  count(chapter, word) %>%
+  bind_log_odds(set = chapter, feature = word, n = n)
+
+log_odds_chapter %>%
+  arrange(-log_odds)
+
+# Looking at a single Chapter
+log_odds_chapter %>%
+  group_by(chapter) %>%
+  top_n(10, log_odds) %>%
+  ungroup() %>%
+  mutate(chapter = as.factor(chapter),
+         word = reorder_within(word, log_odds, chapter)) %>%
+  ggplot(aes(x = word, y = log_odds, fill = chapter)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~chapter, scales = "free") +
+  scale_x_reordered() +
+  labs(x = "",
+       y = "Log-Odds Ratio",
+       title = "Most Unique Words by each Chapter") +
+  coord_flip() 
+```
+
 6. Map of country and fines
