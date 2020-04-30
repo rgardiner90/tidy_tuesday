@@ -15,6 +15,7 @@ library(lubridate)
 library(broom)
 library(tidytext)
 library(tidylo)
+library(mapproj)
 
 gdpr_violations <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-04-21/gdpr_violations.tsv')
 gdpr_text <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-04-21/gdpr_text.tsv')
@@ -175,7 +176,7 @@ log_odds_chapter %>%
 # Looking at a single Chapter
 log_odds_chapter %>%
   group_by(chapter) %>%
-  top_n(10, log_odds) %>%
+  top_n(10, abs(log_odds)) %>%
   ungroup() %>%
   mutate(chapter = as.factor(chapter),
          word = reorder_within(word, log_odds, chapter)) %>%
@@ -189,4 +190,32 @@ log_odds_chapter %>%
   coord_flip() 
 ```
 
-6. Map of country and fines
+
+```{r}
+country_totals <- gdpr_violations %>%
+  group_by(name) %>%
+  summarise(total_fines = sum(price)) %>%
+  rename("region" = name) %>%
+  mutate(region = ifelse(region == "United Kingdom", "UK", region))
+
+country_map_data <- map_data("world") %>%
+  filter(region %in% country_totals$region)
+
+country_name_data <- country_map_data %>%
+  filter(region %in% country_totals$region) %>%
+  group_by(region) %>%
+  summarise(long = mean(long), 
+            lat = mean(lat))
+
+country_totals %>%
+  left_join(country_map_data, by = "region") %>%
+  ggplot(aes(x = long, y = lat)) +
+  geom_polygon(aes(fill = total_fines, group = group)) +
+  # geom_text(aes(label = region), data = country_name_data,  
+  #           size = 3, color = "white") +
+  theme_void() +
+  scale_fill_viridis_c()
+```
+
+
+
