@@ -1,0 +1,32 @@
+---
+title: "measles"
+author: "Richard G. Gardiner"
+date: "5/1/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+
+measles <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-02-25/measles.csv')
+```
+
+```{r}
+measles %>%
+  distinct(state)
+```
+
+
+## Analyses
+
+1. Get averages by state (find those with lower rates)
+2. Look at the exemptions (xrel, xmed, xper). 
+3. Plot the schools. 
+  - For a state that has lower rates of enrollment, plot the schools to see if there are any trends geographically within the state (is Southern California worse than Northern/Central California).
+4. If there is enough variation, try to do an analysis (probably too small when aggregated to do a regression) with having ideology (Berry measure) play a role. 
+
