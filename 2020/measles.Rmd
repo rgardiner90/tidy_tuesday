@@ -22,9 +22,28 @@ measles %>%
 ```
 
 
+```{r}
+measles %>%
+  group_by(state) %>%
+  summarise(average_vaccination = mean(mmr, na.rm = TRUE),
+            sd = sd(mmr, na.rm = TRUE),
+            lower = average_vaccination - sd,
+            upper = average_vaccination + sd) %>%
+  filter(average_vaccination > 0) %>% # some states have -1 as the rate.. Doesn't make any sense.
+  mutate(state = fct_reorder(state, average_vaccination)) %>%
+  ggplot(aes(x = state, y = average_vaccination)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper)) +
+  labs(x = "", y = "Vaccination Rates", 
+       title = "Average Vaccination Rates for Schools",
+       caption = "Error Bars Indicate One Standard Deviation Above/Below") +
+  coord_flip() +
+  theme_minimal() 
+```
+
+
 ## Analyses
 
-1. Get averages by state (find those with lower rates)
 2. Look at the exemptions (xrel, xmed, xper). 
 3. Plot the schools. 
   - For a state that has lower rates of enrollment, plot the schools to see if there are any trends geographically within the state (is Southern California worse than Northern/Central California).
