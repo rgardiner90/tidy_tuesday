@@ -41,10 +41,32 @@ measles %>%
   theme_minimal() 
 ```
 
+```{r}
+measles %>%
+  count(xrel)
+
+measles %>%
+  filter(!is.na(xrel)) %>%
+  group_by(state) %>%
+  count(xrel)
+
+measles %>%
+  ggplot(aes(xmed)) +
+  geom_histogram()
+
+measles %>%
+  ggplot(aes(xper)) +
+  geom_histogram()
+```
+
+The exemptions are supposed to be percentages, but xper has a value over 100%
+```{r}
+summary(measles) 
+```
+
 
 ## Analyses
 
-2. Look at the exemptions (xrel, xmed, xper). 
 3. Plot the schools. 
   - For a state that has lower rates of enrollment, plot the schools to see if there are any trends geographically within the state (is Southern California worse than Northern/Central California).
 4. If there is enough variation, try to do an analysis (probably too small when aggregated to do a regression) with having ideology (Berry measure) play a role. 
