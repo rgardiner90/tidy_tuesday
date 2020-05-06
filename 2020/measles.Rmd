@@ -65,6 +65,40 @@ summary(measles)
 ```
 
 
+```{r}
+# plotting Idaho with Washington as second choice
+measles %>%
+  filter(overall != -1) %>%
+  group_by(state) %>%
+  summarise(std = sd(overall, na.rm = TRUE)) %>%
+  arrange(-std)
+
+idaho <- map_data("state") %>%
+  filter(region == "idaho")
+
+washington <- map_data("state") %>%
+  filter(region == "washington")
+
+measles %>%
+  filter(state == "Idaho") %>%
+  ggplot() +
+  geom_polygon(data = idaho, aes(x = long, y = lat, group = group)) +
+  geom_point(aes(x = lng, y = lat, color = overall)) +
+  theme_void() +
+  xlim(-120, -110) +
+  scale_color_gradient2(low = "red2", mid = 50, high = "blue")
+
+
+measles %>%
+  filter(state == "Washington") %>%
+  ggplot() +
+  geom_polygon(data = washington, aes(x = long, y = lat, group = group)) +
+  geom_point(aes(x = lng, y = lat, color = overall)) +
+  theme_void() +
+  scale_color_gradient2(low = "red2", mid = 50, high = "blue")
+```
+
+
 ## Analyses
 
 3. Plot the schools. 
