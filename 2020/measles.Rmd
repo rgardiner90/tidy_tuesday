@@ -95,13 +95,19 @@ measles %>%
   geom_polygon(data = washington, aes(x = long, y = lat, group = group)) +
   geom_point(aes(x = lng, y = lat, color = overall)) +
   theme_void() +
-  scale_color_gradient2(low = "red2", mid = 50, high = "blue")
+  scale_color_gradient2(low = "red2", midpoint = 50, high = "blue", mid = "white")
 ```
 
+```{r}
+measles %>%
+  filter(mmr > 0,
+         !is.na(type)) %>%
+  group_by(type) %>%
+  summarise(average_vacc = mean(mmr)) %>%
+  ungroup %>%
+  arrange(-average_vacc)
+```
 
 ## Analyses
 
-3. Plot the schools. 
-  - For a state that has lower rates of enrollment, plot the schools to see if there are any trends geographically within the state (is Southern California worse than Northern/Central California).
-4. If there is enough variation, try to do an analysis (probably too small when aggregated to do a regression) with having ideology (Berry measure) play a role. 
-
+5. Do a regression of vaccination rate by school type, but then it needs to be a hierarchical model with schools nested within states.
