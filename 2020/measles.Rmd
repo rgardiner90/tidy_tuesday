@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
+library(lme4)
 
 measles <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-02-25/measles.csv')
 ```
@@ -110,4 +111,27 @@ measles %>%
 
 ## Analyses
 
-5. Do a regression of vaccination rate by school type, but then it needs to be a hierarchical model with schools nested within states.
+```{r}
+measles %>%
+  filter(mmr > 0) %>%
+  select(mmr, type, state) %>%
+  mutate(type = fct_relevel(type, "Public")) %>%
+  lmer(mmr ~ type + (1 | state), data = .) %>%
+  broom::tidy(conf.int = TRUE) %>%
+  filter(str_detect(term, "type")) %>%
+  mutate(term = str_remove(term, "type"),
+         term = fct_reorder(term, estimate),
+         sig = ifelse(estimate < 0 & conf.high < 0, "negative",
+                      ifelse(estimate > 0 & conf.low > 0, "positive", "not significant"))) %>%
+  ggplot(aes(x = term, y = estimate, color = sig)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
+  coord_flip() +
+  geom_hline(yintercept = 0, lty = 2, color = "red") +
+  theme_minimal() +
+  scale_color_manual(values = c("red", "black")) +
+  labs(x = "", y = "Coefficient Estimates", color = "Statistical Significance",
+       title = "Do different types of schools have different MMR vaccination rates?",
+       subtitle = "Charter and private schools are much lower than public schools",
+       caption = "Significance at the 95% level.\nPublic Schools serve as baseline group")
+```
