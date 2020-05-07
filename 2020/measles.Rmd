@@ -133,5 +133,5 @@ measles %>%
   labs(x = "", y = "Coefficient Estimates", color = "Statistical Significance",
        title = "Do different types of schools have different MMR vaccination rates?",
        subtitle = "Charter and private schools are much lower than public schools",
-       caption = "Significance at the 95% level.\nPublic Schools serve as baseline group")
+       caption = "Significance at the 95% level.\nPublic Schools serve as baseline group.")
 ```
