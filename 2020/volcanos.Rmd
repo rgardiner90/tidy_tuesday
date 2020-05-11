@@ -1,0 +1,25 @@
+---
+title: "volcanos"
+author: "Richard G. Gardiner"
+date: "5/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+volcano <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-12/volcano.csv')
+eruptions <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-12/eruptions.csv')
+events <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-12/events.csv')
+
+```
+
+## Analyses
+
+1. Volcano: Plot the location of volcanos (potentially focus on Ring of Fire or volcanos in US, especially near places of interest like Utah or DC).
+2. Eruptions: Look at the biggest eruptions. See if there are any trends over time (so group by volcano). Look at the longest running volcano eruptions. Look at type of eruptions.
+  - Later on, combine interesting eruptions (or locations), then combine this with the volcano dataset to look at populations. One potential is to take big eruptions in other parts of hte world, and see what would happen if those big eruptions happened on a similar volcano in a place of interest.
+3. Events: Look at "event remarks"
