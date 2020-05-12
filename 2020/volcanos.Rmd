@@ -11,15 +11,50 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r}
+library(tidyverse)
+
 volcano <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-12/volcano.csv')
 eruptions <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-12/eruptions.csv')
 events <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-12/events.csv')
 
 ```
 
+```{r}
+world <- map_data(map = "world")
+
+world %>%
+  ggplot() +
+  geom_polygon(aes(x = long, y = lat, group = group)) +
+  geom_point(data = volcano, aes(x = longitude, y = latitude), color = "red") +
+  theme_void()
+
+world %>%
+  filter(region == "USA",
+         !subregion %in% c("Hawaii", "Alaska")) %>%
+  ggplot() +
+  geom_polygon(aes(x = long, y = lat, group = group)) +
+  geom_point(data = volcano %>%
+               filter(country == "United States",
+                      !str_detect(region, "Hawaii|Alas|Marianas"),
+                      latitude > 0), aes(x = longitude, y = latitude), color = "red") +
+  theme_void()
+
+world %>%
+  filter(region == "Philippines") %>%
+  ggplot() +
+  geom_polygon(aes(x = long, y = lat, group = group)) +
+  geom_point(data = volcano %>%
+               filter(country == "Philippines"), aes(x = longitude, y = latitude), color = "red") +
+  # expand_limits(y = c(0, 60), x = c(110, 140)) 
+  coord_map() +
+  theme_void()
+```
+
+
 ## Analyses
 
 1. Volcano: Plot the location of volcanos (potentially focus on Ring of Fire or volcanos in US, especially near places of interest like Utah or DC).
+  - now plot places of interest and make the size be the size of eruptions.
 2. Eruptions: Look at the biggest eruptions. See if there are any trends over time (so group by volcano). Look at the longest running volcano eruptions. Look at type of eruptions.
   - Later on, combine interesting eruptions (or locations), then combine this with the volcano dataset to look at populations. One potential is to take big eruptions in other parts of hte world, and see what would happen if those big eruptions happened on a similar volcano in a place of interest.
 3. Events: Look at "event remarks"
