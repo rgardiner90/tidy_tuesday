@@ -51,10 +51,44 @@ world %>%
 ```
 
 
+```{r}
+volcano_eruption_location <- eruptions %>%
+  filter(!is.na(vei)) %>%
+  select(volcano_number, volcano_name, vei) %>%
+  left_join(volcano, by = "volcano_number")
+
+world %>%
+  filter(region == "USA",
+         !subregion %in% c("Hawaii", "Alaska")) %>%
+  ggplot() +
+  geom_polygon(aes(x = long, y = lat, group = group)) +
+  geom_point(data = volcano_eruption_location %>%
+               filter(country == "United States",
+                      !str_detect(region, "Hawaii|Alas|Marianas"),
+                      latitude > 0), aes(x = longitude, y = latitude, size = vei), 
+             color = "red",
+             show.legend = FALSE) +
+  theme_void() +
+  labs(title = "Selected Volcanic Eruptions in US",
+       subtitle = "Size = Scale of Eruption")
+
+world %>%
+  filter(region == "Philippines") %>%
+  ggplot() +
+  geom_polygon(aes(x = long, y = lat, group = group)) +
+  geom_point(data = volcano_eruption_location %>%
+               filter(country == "Philippines"), aes(x = longitude, y = latitude, size = vei),
+             color = "red",
+             show.legend = FALSE) +
+  coord_map() +
+  theme_void() +
+  labs(title = "Selected Volcanic Eruptions in the Philippines",
+       subtitle = "Size = Scale of Eruption")
+```
+
+
 ## Analyses
 
-1. Volcano: Plot the location of volcanos (potentially focus on Ring of Fire or volcanos in US, especially near places of interest like Utah or DC).
-  - now plot places of interest and make the size be the size of eruptions.
 2. Eruptions: Look at the biggest eruptions. See if there are any trends over time (so group by volcano). Look at the longest running volcano eruptions. Look at type of eruptions.
   - Later on, combine interesting eruptions (or locations), then combine this with the volcano dataset to look at populations. One potential is to take big eruptions in other parts of hte world, and see what would happen if those big eruptions happened on a similar volcano in a place of interest.
 3. Events: Look at "event remarks"
