@@ -120,7 +120,7 @@ world %>%
 
 
 ```{r}
-eruptions %>%
+dates <- eruptions %>%
   filter(!is.na(end_year),
          !is.na(start_year),
          !is.na(vei),
@@ -129,8 +129,9 @@ eruptions %>%
          start_day = ifelse(start_day == 0, 1, start_day),
          start_date = mdy(paste0(start_month,"/",start_day,"/",start_year)),
          end_date = mdy(paste0(end_month,"/",end_day,"/",end_year)),
-         number_days = end_date - start_date) %>%
-  arrange(-vei) %>%
+         number_days = end_date - start_date) 
+  
+dates %>%
   group_by(vei) %>%
   summarise(mean_days = mean(number_days, na.rm = TRUE),
             sd_days = sd(number_days, na.rm = TRUE),
@@ -138,6 +139,15 @@ eruptions %>%
   ggplot(aes(x = vei, y = mean_days)) +
   geom_col()
 
+
+world %>%
+  ggplot() +
+  geom_polygon(aes(x = long, y = lat, group = group)) +
+  geom_point(data = dates %>%
+               top_n(10, number_days), 
+             aes(x = longitude, y = latitude), color = "red", size = 3) +
+  theme_void() +
+  labs(title = "Longest Lasting Eruptions")
 ```
 
 
