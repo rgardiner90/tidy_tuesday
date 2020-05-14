@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
+library(lubridate)
 
 volcano <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-12/volcano.csv')
 eruptions <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-12/eruptions.csv')
@@ -87,8 +88,59 @@ world %>%
 ```
 
 
+```{r}
+eruptions %>%
+  filter(!is.na(vei)) %>%
+  count(vei) %>%
+  ggplot(aes(x = vei, y = n)) +
+  geom_col()
+
+volcano_eruption_location %>%
+  filter(!is.na(primary_volcano_type)) %>%
+  mutate(primary_volcano_type = str_remove(primary_volcano_type, "\\(es\\)|\\(s\\)")) %>%
+  group_by(primary_volcano_type) %>%
+  mutate(mean = mean(vei)) %>%
+  ungroup()  %>%
+  mutate(primary_volcano_type = fct_reorder(primary_volcano_type, mean)) %>%
+  ggplot(aes(x = primary_volcano_type, y = vei)) +
+  geom_boxplot() +
+  coord_flip()
+```
+
+```{r}
+world %>%
+  ggplot() +
+  geom_polygon(aes(x = long, y = lat, group = group)) +
+  geom_point(data = volcano_eruption_location %>%
+               filter(vei == 7), 
+             aes(x = longitude, y = latitude), color = "red", size = 3) +
+  theme_void() +
+  labs(title = "Location of the Largest Eruptions")
+```
+
+
+```{r}
+eruptions %>%
+  filter(!is.na(end_year),
+         !is.na(start_year),
+         !is.na(vei),
+         vei < 7) %>%
+  mutate(start_month = ifelse(start_month == 0, 1, start_month),
+         start_day = ifelse(start_day == 0, 1, start_day),
+         start_date = mdy(paste0(start_month,"/",start_day,"/",start_year)),
+         end_date = mdy(paste0(end_month,"/",end_day,"/",end_year)),
+         number_days = end_date - start_date) %>%
+  arrange(-vei) %>%
+  group_by(vei) %>%
+  summarise(mean_days = mean(number_days, na.rm = TRUE),
+            sd_days = sd(number_days, na.rm = TRUE),
+            count = n()) %>%
+  ggplot(aes(x = vei, y = mean_days)) +
+  geom_col()
+
+```
+
+
 ## Analyses
 
-2. Eruptions: Look at the biggest eruptions. See if there are any trends over time (so group by volcano). Look at the longest running volcano eruptions. Look at type of eruptions.
-  - Later on, combine interesting eruptions (or locations), then combine this with the volcano dataset to look at populations. One potential is to take big eruptions in other parts of hte world, and see what would happen if those big eruptions happened on a similar volcano in a place of interest.
 3. Events: Look at "event remarks"
