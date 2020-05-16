@@ -1,0 +1,41 @@
+---
+title: "hotels"
+author: "Richard G. Gardiner"
+date: "5/16/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+
+hotels <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-02-11/hotels.csv')
+```
+
+```{r}
+hotels %>%
+  count(hotel)
+
+# online travel agent was much bigger
+hotels %>%
+  count(market_segment, sort = TRUE)
+
+hotels
+```
+
+
+
+## Analyses
+
+1. Check out tidyverts family (3 packages): https://tidyverts.org/
+  - They have a book about forcasting that looks really interesting: https://otexts.com/fpp3/
+2. Treat hotel as a potential explainer (look for differences)
+3. Look at is_cancelled
+4. do some stuff with dates.
+5. Look at families with 2 adults and 2 kids (for variation also do babies)
+6. Look at how often the types of meals are.
+7. look at changes to market_segment over time (I would expect direct to move up and anything with TA to go down)
